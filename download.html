@@ -1,0 +1,109 @@
+<!-- download.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ファイルダウンロード</title>
+  <style>
+    #progressBar {
+      width: 100%;
+      height: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    #progressBarInner {
+      width: 0%;
+      height: 100%;
+      background-color: #2196F3;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <h1>ファイルをダウンロード</h1>
+  <input type="text" id="fileIdInput" placeholder="ファイルID"><br><br>
+  <input type="password" id="passwordInput" placeholder="パスワード"><br><br>
+  <button id="downloadBtn">ダウンロード</button>
+
+  <div id="progressBar"><div id="progressBarInner"></div></div>
+  <p id="status"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD3S65gqdJSGJoeKTY7en6IPiEhu-7SmHs",
+      authDomain: "file-app-712ea.firebaseapp.com",
+      databaseURL: "https://file-app-712ea-default-rtdb.firebaseio.com",
+      projectId: "file-app-712ea",
+      storageBucket: "file-app-712ea.appspot.com",
+      messagingSenderId: "969390416407",
+      appId: "1:969390416407:web:1721ff472e09ee8d053252",
+      measurementId: "G-KMEVC3Q5RE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const updateProgress = (percent) => {
+      document.getElementById("progressBarInner").style.width = percent + "%";
+    };
+
+    document.getElementById("downloadBtn").onclick = async () => {
+      const fileId = document.getElementById("fileIdInput").value.trim();
+      const password = document.getElementById("passwordInput").value;
+      const status = document.getElementById("status");
+
+      if (!fileId) {
+        status.textContent = "ファイルIDを入力してください";
+        return;
+      }
+
+      updateProgress(10);
+
+      const snapshot = await get(ref(db, "files/" + fileId));
+      if (!snapshot.exists()) {
+        status.textContent = "ファイルが見つかりません";
+        updateProgress(0);
+        return;
+      }
+
+      const data = snapshot.val();
+      if (data.password !== password) {
+        status.textContent = "パスワードが違います";
+        updateProgress(0);
+        return;
+      }
+
+      try {
+        updateProgress(30);
+        const binary = atob(data.data).split('').map(c => c.charCodeAt(0).toString(2).padStart(6, '0')).join('');
+        updateProgress(50);
+
+        const bytes = [];
+        for (let i = 0; i < binary.length; i += 8) {
+          const byte = binary.slice(i, i + 8);
+          if (byte.length === 8) bytes.push(parseInt(byte, 2));
+        }
+
+        updateProgress(70);
+
+        const blob = new Blob([new Uint8Array(bytes)], { type: data.mimetype });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = data.filename;
+        a.click();
+
+        updateProgress(100);
+        status.textContent = "✅ ダウンロードしました！";
+      } catch (err) {
+        status.textContent = "復元エラー：" + err.message;
+        updateProgress(0);
+      }
+    };
+  </script>
+</body>
+</html>
