@@ -2,30 +2,35 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ファイル共有ツール</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 50px;
-    }
-    a {
-      display: inline-block;
-      margin: 20px;
-      padding: 15px 30px;
-      background: #4CAF50;
-      color: white;
-      text-decoration: none;
-      border-radius: 10px;
-    }
-    a:hover {
-      background: #45a049;
-    }
-  </style>
+  <title>ファイルツール メニュー</title>
 </head>
 <body>
-  <h1>ファイル共有ツール</h1>
-  <a href="upload.html">ファイルをアップロード</a>
-  <a href="download.html">ファイルをダウンロード</a>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.body.innerHTML = `
+          <h1>ファイルツールメニュー</h1>
+          <p>ようこそ、${user.displayName} さん</p>
+          <ul>
+            <li><a href="upload.html">📤 アップロード</a></li>
+            <li><a href="download.html">📥 ダウンロード</a></li>
+            <li><a href="record.html">🎥 録画ツール</a></li>
+          </ul>
+          <button id="logout">ログアウト</button>
+        `;
+        document.getElementById("logout").onclick = () => signOut(auth);
+      } else {
+        signInWithPopup(auth, provider);
+      }
+    });
+  </script>
 </body>
 </html>
