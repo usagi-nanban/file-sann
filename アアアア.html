@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>MTS → MP4 圧縮ツール</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; text-align: center; }
+    #drop-zone {
+      border: 3px dashed #ccc; padding: 50px; border-radius: 10px;
+      margin-top: 20px; background: #f9f9f9;
+    }
+    #log { margin-top: 1em; white-space: pre-wrap; font-size: 0.9em; color: #444; }
+    button { padding: 0.5em 1em; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h1>MTS → MP4 圧縮 & メタデータ削除ツール</h1>
+  <p>ファイルを下のエリアにドロップしてください（.mts）</p>
+  <div id="drop-zone">ここにファイルをドロップ</div>
+  <div id="log"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.5/dist/ffmpeg.min.js"></script>
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+    const logElem = document.getElementById("log");
+
+    async function transcode(file) {
+      logElem.textContent = "🔄 FFmpeg 読み込み中...";
+      if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+      ffmpeg.FS("writeFile", "input.mts", await fetchFile(file));
+      logElem.textContent = "⚙️ 変換中...（少し時間がかかります）";
+
+      await ffmpeg.run(
+        "-i", "input.mts",
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "28",
+        "-map_metadata", "-1", // メタデータ削除（すべて）
+        "output.mp4"
+      );
+
+      const data = ffmpeg.FS("readFile", "output.mp4");
+      const url = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "converted.mp4";
+      a.textContent = "✅ ダウンロードはこちら";
+      logElem.textContent = "";
+      logElem.appendChild(a);
+    }
+
+    const dropZone = document.getElementById("drop-zone");
+    dropZone.addEventListener("dragover", e => e.preventDefault());
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (!file.name.endsWith(".mts")) {
+        logElem.textContent = "❌ .mtsファイルを選んでください";
+        return;
+      }
+      transcode(file);
+    });
+  </script>
+</body>
+</html>
