@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>録画ツール</title>
+</head>
+<body>
+  <h1>録画ツール</h1>
+  <video id="preview" autoplay playsinline muted></video><br>
+  <select id="cameraSelect"></select><br>
+  <button id="start">録画開始</button>
+  <button id="stop" disabled>録画停止</button>
+  <progress id="progress" value="0" max="100"></progress>
+  <p id="result"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const ensureLogin = () => new Promise(resolve => {
+      onAuthStateChanged(auth, user => {
+        if (user) resolve(user);
+        else signInWithPopup(auth, provider).then(res => resolve(res.user));
+      });
+    });
+
+    const video = document.getElementById("preview");
+    const select = document.getElementById("cameraSelect");
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    devices.filter(d => d.kind === "videoinput").forEach((device) => {
+      const option = document.createElement("option");
+      option.value = device.deviceId;
+      option.textContent = device.label || `カメラ ${select.length + 1}`;
+      select.appendChild(option);
+    });
+
+    async function startCamera(deviceId) {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId },
+        audio: true
+      });
+      video.srcObject = stream;
+      return stream;
+    }
+
+    let recorder, chunks = [];
+    let stream = await startCamera(select.value);
+
+    select.onchange = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      stream = await startCamera(select.value);
+    };
+
+    document.getElementById("start").onclick = () => {
+      recorder = new MediaRecorder(stream);
+      chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const buffer = await blob.arrayBuffer();
+        const bits = Array.from(new Uint8Array(buffer)).map(b => b.toString(2).padStart(8, '0')).join('');
+        const fileId = Math.random().toString(36).slice(2, 10);
+        const password = Math.random().toString(36).slice(2, 10);
+        const progress = document.getElementById("progress");
+
+        await ensureLogin();
+        for (let i = 0; i < bits.length; i += 50000) {
+          await set(ref(db, `files/${fileId}/chunks/${i}`), bits.slice(i, i + 50000));
+          progress.value = Math.floor((i / bits.length) * 100);
+        }
+        await set(ref(db, `files/${fileId}/password`), password);
+        document.getElementById("result").textContent = `完了！ID: ${fileId}, PW: ${password}`;
+      };
+      recorder.start();
+      document.getElementById("start").disabled = true;
+      document.getElementById("stop").disabled = false;
+    };
+
+    document.getElementById("stop").onclick = () => {
+      recorder.stop();
+      document.getElementById("start").disabled = false;
+      document.getElementById("stop").disabled = true;
+    };
+  </script>
+</body>
+</html>
