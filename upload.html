@@ -1,1 +1,90 @@
-<script language=javascript>document.write(unescape('%3C%21--%20upload.html%20--%3E%0A%3C%21DOCTYPE%20html%3E%0A%3Chtml%3E%0A%3Chead%3E%0A%20%20%3Cmeta%20charset%3D%22utf-8%22%3E%0A%20%20%3Ctitle%3E%u30D5%u30A1%u30A4%u30EB%u30A2%u30C3%u30D7%u30ED%u30FC%u30C9%3C/title%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20%23progressBar%20%7B%0A%20%20%20%20%20%20width%3A%20100%25%3B%0A%20%20%20%20%20%20height%3A%2020px%3B%0A%20%20%20%20%20%20background-color%3A%20%23eee%3B%0A%20%20%20%20%20%20border-radius%3A%2010px%3B%0A%20%20%20%20%20%20overflow%3A%20hidden%3B%0A%20%20%20%20%20%20margin-top%3A%2010px%3B%0A%20%20%20%20%7D%0A%20%20%20%20%23progressBarInner%20%7B%0A%20%20%20%20%20%20width%3A%200%25%3B%0A%20%20%20%20%20%20height%3A%20100%25%3B%0A%20%20%20%20%20%20background-color%3A%20%234CAF50%3B%0A%20%20%20%20%20%20transition%3A%20width%200.3s%3B%0A%20%20%20%20%7D%0A%20%20%3C/style%3E%0A%3C/head%3E%0A%3Cbody%3E%0A%20%20%3Ch1%3E%u30D5%u30A1%u30A4%u30EB%u3092%u30A2%u30C3%u30D7%u30ED%u30FC%u30C9%3C/h1%3E%0A%20%20%3Cinput%20type%3D%22file%22%20id%3D%22fileInput%22%3E%3Cbr%3E%3Cbr%3E%0A%20%20%3Cinput%20type%3D%22password%22%20id%3D%22passwordInput%22%20placeholder%3D%22%u30D1%u30B9%u30EF%u30FC%u30C9%uFF08%u4EFB%u610F%uFF09%22%3E%3Cbr%3E%3Cbr%3E%0A%20%20%3Cbutton%20id%3D%22uploadBtn%22%3E%u30A2%u30C3%u30D7%u30ED%u30FC%u30C9%3C/button%3E%0A%0A%20%20%3Cdiv%20id%3D%22progressBar%22%3E%3Cdiv%20id%3D%22progressBarInner%22%3E%3C/div%3E%3C/div%3E%0A%20%20%3Cp%20id%3D%22result%22%3E%3C/p%3E%0A%0A%20%20%3Cscript%20type%3D%22module%22%3E%0A%20%20%20%20import%20%7B%20initializeApp%20%7D%20from%20%22https%3A//www.gstatic.com/firebasejs/10.8.1/firebase-app.js%22%3B%0A%20%20%20%20import%20%7B%20getDatabase%2C%20ref%2C%20set%20%7D%20from%20%22https%3A//www.gstatic.com/firebasejs/10.8.1/firebase-database.js%22%3B%0A%0A%20%20%20%20const%20firebaseConfig%20%3D%20%7B%0A%20%20%20%20%20%20apiKey%3A%20%22AIzaSyD3S65gqdJSGJoeKTY7en6IPiEhu-7SmHs%22%2C%0A%20%20%20%20%20%20authDomain%3A%20%22file-app-712ea.firebaseapp.com%22%2C%0A%20%20%20%20%20%20databaseURL%3A%20%22https%3A//file-app-712ea-default-rtdb.firebaseio.com%22%2C%0A%20%20%20%20%20%20projectId%3A%20%22file-app-712ea%22%2C%0A%20%20%20%20%20%20storageBucket%3A%20%22file-app-712ea.appspot.com%22%2C%0A%20%20%20%20%20%20messagingSenderId%3A%20%22969390416407%22%2C%0A%20%20%20%20%20%20appId%3A%20%221%3A969390416407%3Aweb%3A1721ff472e09ee8d053252%22%2C%0A%20%20%20%20%20%20measurementId%3A%20%22G-KMEVC3Q5RE%22%0A%20%20%20%20%7D%3B%0A%0A%20%20%20%20const%20app%20%3D%20initializeApp%28firebaseConfig%29%3B%0A%20%20%20%20const%20db%20%3D%20getDatabase%28app%29%3B%0A%0A%20%20%20%20const%20updateProgress%20%3D%20%28percent%29%20%3D%3E%20%7B%0A%20%20%20%20%20%20document.getElementById%28%22progressBarInner%22%29.style.width%20%3D%20percent%20+%20%22%25%22%3B%0A%20%20%20%20%7D%3B%0A%0A%20%20%20%20document.getElementById%28%22uploadBtn%22%29.onclick%20%3D%20async%20%28%29%20%3D%3E%20%7B%0A%20%20%20%20%20%20const%20file%20%3D%20document.getElementById%28%22fileInput%22%29.files%5B0%5D%3B%0A%20%20%20%20%20%20const%20password%20%3D%20document.getElementById%28%22passwordInput%22%29.value%3B%0A%20%20%20%20%20%20const%20result%20%3D%20document.getElementById%28%22result%22%29%3B%0A%0A%20%20%20%20%20%20if%20%28%21file%29%20%7B%0A%20%20%20%20%20%20%20%20result.textContent%20%3D%20%22%u30D5%u30A1%u30A4%u30EB%u3092%u9078%u629E%u3057%u3066%u304F%u3060%u3055%u3044%u3002%22%3B%0A%20%20%20%20%20%20%20%20return%3B%0A%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20updateProgress%2810%29%3B%0A%0A%20%20%20%20%20%20const%20arrayBuffer%20%3D%20await%20file.arrayBuffer%28%29%3B%0A%20%20%20%20%20%20const%20bytes%20%3D%20new%20Uint8Array%28arrayBuffer%29%3B%0A%20%20%20%20%20%20updateProgress%2830%29%3B%0A%0A%20%20%20%20%20%20const%20binary%20%3D%20%5B...bytes%5D.map%28b%20%3D%3E%20b.toString%282%29.padStart%288%2C%20%270%27%29%29.join%28%27%27%29%3B%0A%20%20%20%20%20%20updateProgress%2850%29%3B%0A%0A%20%20%20%20%20%20const%20base64like%20%3D%20btoa%28binary.match%28/.%7B1%2C6%7D/g%29.map%28bin%20%3D%3E%20String.fromCharCode%28parseInt%28bin%2C%202%29%29%29.join%28%27%27%29%29%3B%0A%20%20%20%20%20%20updateProgress%2870%29%3B%0A%0A%20%20%20%20%20%20const%20fileId%20%3D%20Math.random%28%29.toString%2836%29.substring%282%2C%2010%29%3B%0A%20%20%20%20%20%20await%20set%28ref%28db%2C%20%22files/%22%20+%20fileId%29%2C%20%7B%0A%20%20%20%20%20%20%20%20filename%3A%20file.name%2C%0A%20%20%20%20%20%20%20%20mimetype%3A%20file.type%2C%0A%20%20%20%20%20%20%20%20data%3A%20base64like%2C%0A%20%20%20%20%20%20%20%20password%3A%20password%0A%20%20%20%20%20%20%7D%29%3B%0A%0A%20%20%20%20%20%20updateProgress%28100%29%3B%0A%20%20%20%20%20%20result.innerHTML%20%3D%20%60%u2705%20%u30A2%u30C3%u30D7%u30ED%u30FC%u30C9%u5B8C%u4E86%uFF01%3Cbr%3E%u30D5%u30A1%u30A4%u30EBID%3A%20%3Ccode%3E%24%7BfileId%7D%3C/code%3E%60%3B%0A%20%20%20%20%7D%3B%0A%20%20%3C/script%3E%0A%3C/body%3E%0A%3C/html%3E%0A'))</script>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ファイルアップロード</title>
+  <style>
+    #progressBar {
+      width: 100%;
+      height: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    #progressBarInner {
+      width: 0%;
+      height: 100%;
+      background-color: #4CAF50;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <h1>ファイルをアップロード</h1>
+  <input type="file" id="fileInput"><br><br>
+  <input type="password" id="passwordInput" placeholder="パスワード（任意）"><br><br>
+  <button id="uploadBtn">アップロード</button>
+
+  <div id="progressBar"><div id="progressBarInner"></div></div>
+  <p id="result"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyClRN44ehnNYXuJ_P3g8ujcp-Xsl9-SecM",
+      authDomain: "new-file-3e4db.firebaseapp.com",
+      databaseURL: "https://new-file-3e4db-default-rtdb.firebaseio.com",
+      projectId: "new-file-3e4db",
+      storageBucket: "new-file-3e4db.firebasestorage.app",
+      messagingSenderId: "485447051421",
+      appId: "1:485447051421:web:82bb9866ff38d80a540c74",
+      measurementId: "G-W4B14F8RWG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    getAnalytics(app);
+    const db = getDatabase(app);
+
+    const updateProgress = (percent) => {
+      document.getElementById("progressBarInner").style.width = percent + "%";
+    };
+
+    document.getElementById("uploadBtn").onclick = async () => {
+      const file = document.getElementById("fileInput").files[0];
+      const password = document.getElementById("passwordInput").value;
+      const result = document.getElementById("result");
+
+      if (!file) {
+        result.textContent = "ファイルを選択してください。";
+        return;
+      }
+
+      updateProgress(10);
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      updateProgress(30);
+
+      const binary = [...bytes].map(b => b.toString(2).padStart(8, '0')).join('');
+      updateProgress(50);
+
+      const base64like = btoa(binary.match(/.{1,6}/g).map(bin => String.fromCharCode(parseInt(bin, 2))).join(''));
+      updateProgress(70);
+
+      const fileId = Math.random().toString(36).substring(2, 10);
+      await set(ref(db, "files/" + fileId), {
+        filename: file.name,
+        mimetype: file.type,
+        data: base64like,
+        password: password
+      });
+
+      updateProgress(100);
+      result.innerHTML = `✅ アップロード完了！<br>ファイルID: <code>${fileId}</code>`;
+    };
+  </script>
+</body>
+</html>
