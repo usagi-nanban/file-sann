@@ -1,110 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>ファイルダウンロード</title>
-  <style>
-    #progressBar {
-      width: 100%;
-      height: 20px;
-      background-color: #eee;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    #progressBarInner {
-      width: 0%;
-      height: 100%;
-      background-color: #2196F3;
-      transition: width 0.3s;
-    }
-  </style>
 </head>
 <body>
-  <h1>ファイルをダウンロード</h1>
-  <input type="text" id="fileIdInput" placeholder="ファイルID"><br><br>
-  <input type="password" id="passwordInput" placeholder="パスワード"><br><br>
+  <h1>ファイルダウンロード</h1>
+  <input type="text" id="fileId" placeholder="ファイルID">
+  <input type="password" id="password" placeholder="パスワード">
   <button id="downloadBtn">ダウンロード</button>
-
-  <div id="progressBar"><div id="progressBarInner"></div></div>
+  <progress id="progress" value="0" max="100"></progress>
   <p id="status"></p>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyClRN44ehnNYXuJ_P3g8ujcp-Xsl9-SecM",
-      authDomain: "new-file-3e4db.firebaseapp.com",
-      databaseURL: "https://new-file-3e4db-default-rtdb.firebaseio.com",
-      projectId: "new-file-3e4db",
-      storageBucket: "new-file-3e4db.firebasestorage.app",
-      messagingSenderId: "485447051421",
-      appId: "1:485447051421:web:82bb9866ff38d80a540c74",
-      measurementId: "G-W4B14F8RWG"
-    };
+    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { firebaseConfig } from "./firebase-config.js";
 
     const app = initializeApp(firebaseConfig);
-    getAnalytics(app);
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    const updateProgress = (percent) => {
-      document.getElementById("progressBarInner").style.width = percent + "%";
-    };
+    const ensureLogin = () => new Promise(resolve => {
+      onAuthStateChanged(auth, user => {
+        if (user) resolve(user);
+        else signInWithPopup(auth, provider).then(res => resolve(res.user));
+      });
+    });
 
-    document.getElementById("downloadBtn").onclick = async () => {
-      const fileId = document.getElementById("fileIdInput").value.trim();
-      const password = document.getElementById("passwordInput").value;
+    document.getElementById("downloadBtn").addEventListener("click", async () => {
+      const fileId = document.getElementById("fileId").value;
+      const inputPass = document.getElementById("password").value;
+      const progress = document.getElementById("progress");
       const status = document.getElementById("status");
 
-      if (!fileId) {
-        status.textContent = "ファイルIDを入力してください";
-        return;
-      }
+      if (!fileId || !inputPass) return alert("IDとパスワードを入力してください");
 
-      updateProgress(10);
-
-      const snapshot = await get(ref(db, "files/" + fileId));
-      if (!snapshot.exists()) {
-        status.textContent = "ファイルが見つかりません";
-        updateProgress(0);
-        return;
-      }
+      await ensureLogin();
+      const snapshot = await get(ref(db, `files/${fileId}`));
+      if (!snapshot.exists()) return alert("ファイルが見つかりません");
 
       const data = snapshot.val();
-      if (data.password !== password) {
-        status.textContent = "パスワードが違います";
-        updateProgress(0);
-        return;
+      if (data.password !== inputPass) return alert("パスワードが違います");
+
+      const chunks = Object.entries(data.chunks).sort(([a], [b]) => a - b).map(([, chunk]) => chunk).join('');
+      progress.value = 50;
+
+      const byteArray = new Uint8Array(chunks.length / 8);
+      for (let i = 0; i < chunks.length; i += 8) {
+        byteArray[i / 8] = parseInt(chunks.slice(i, i + 8), 2);
       }
 
-      try {
-        updateProgress(30);
-        const binary = atob(data.data).split('').map(c => c.charCodeAt(0).toString(2).padStart(6, '0')).join('');
-        updateProgress(50);
-
-        const bytes = [];
-        for (let i = 0; i < binary.length; i += 8) {
-          const byte = binary.slice(i, i + 8);
-          if (byte.length === 8) bytes.push(parseInt(byte, 2));
-        }
-
-        updateProgress(70);
-
-        const blob = new Blob([new Uint8Array(bytes)], { type: data.mimetype });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = data.filename;
-        a.click();
-
-        updateProgress(100);
-        status.textContent = "✅ ダウンロードしました！";
-      } catch (err) {
-        status.textContent = "復元エラー：" + err.message;
-        updateProgress(0);
-      }
-    };
+      const blob = new Blob([byteArray]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "downloaded_file";
+      a.click();
+      URL.revokeObjectURL(url);
+      status.textContent = "✅ ダウンロード完了";
+      progress.value = 100;
+    });
   </script>
 </body>
 </html>
