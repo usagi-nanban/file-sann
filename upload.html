@@ -1,90 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>ファイルアップロード</title>
-  <style>
-    #progressBar {
-      width: 100%;
-      height: 20px;
-      background-color: #eee;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    #progressBarInner {
-      width: 0%;
-      height: 100%;
-      background-color: #4CAF50;
-      transition: width 0.3s;
-    }
-  </style>
 </head>
 <body>
-  <h1>ファイルをアップロード</h1>
-  <input type="file" id="fileInput"><br><br>
-  <input type="password" id="passwordInput" placeholder="パスワード（任意）"><br><br>
-  <button id="uploadBtn">アップロード</button>
-
-  <div id="progressBar"><div id="progressBarInner"></div></div>
+  <h1>ファイルアップロード</h1>
+  <input type="file" id="fileInput">
+  <input type="password" id="passwordInput" placeholder="パスワード">
+  <progress id="progress" value="0" max="100"></progress>
   <p id="result"></p>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyClRN44ehnNYXuJ_P3g8ujcp-Xsl9-SecM",
-      authDomain: "new-file-3e4db.firebaseapp.com",
-      databaseURL: "https://new-file-3e4db-default-rtdb.firebaseio.com",
-      projectId: "new-file-3e4db",
-      storageBucket: "new-file-3e4db.firebasestorage.app",
-      messagingSenderId: "485447051421",
-      appId: "1:485447051421:web:82bb9866ff38d80a540c74",
-      measurementId: "G-W4B14F8RWG"
-    };
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { firebaseConfig } from "./firebase-config.js";
 
     const app = initializeApp(firebaseConfig);
-    getAnalytics(app);
     const db = getDatabase(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    const updateProgress = (percent) => {
-      document.getElementById("progressBarInner").style.width = percent + "%";
-    };
-
-    document.getElementById("uploadBtn").onclick = async () => {
-      const file = document.getElementById("fileInput").files[0];
-      const password = document.getElementById("passwordInput").value;
-      const result = document.getElementById("result");
-
-      if (!file) {
-        result.textContent = "ファイルを選択してください。";
-        return;
-      }
-
-      updateProgress(10);
-      const arrayBuffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      updateProgress(30);
-
-      const binary = [...bytes].map(b => b.toString(2).padStart(8, '0')).join('');
-      updateProgress(50);
-
-      const base64like = btoa(binary.match(/.{1,6}/g).map(bin => String.fromCharCode(parseInt(bin, 2))).join(''));
-      updateProgress(70);
-
-      const fileId = Math.random().toString(36).substring(2, 10);
-      await set(ref(db, "files/" + fileId), {
-        filename: file.name,
-        mimetype: file.type,
-        data: base64like,
-        password: password
+    const ensureLogin = () => new Promise(resolve => {
+      onAuthStateChanged(auth, user => {
+        if (user) resolve(user);
+        else signInWithPopup(auth, provider).then(res => resolve(res.user));
       });
+    });
 
-      updateProgress(100);
-      result.innerHTML = `✅ アップロード完了！<br>ファイルID: <code>${fileId}</code>`;
-    };
+    document.getElementById("fileInput").addEventListener("change", async e => {
+      const file = e.target.files[0];
+      const password = document.getElementById("passwordInput").value;
+      if (!file || !password) return alert("ファイルとパスワードを入力してください");
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const bits = Array.from(new Uint8Array(reader.result)).map(b => b.toString(2).padStart(8, '0')).join('');
+        const fileId = Math.random().toString(36).slice(2, 10);
+
+        await ensureLogin();
+        const progress = document.getElementById("progress");
+        progress.value = 0;
+
+        const chunkSize = 50000;
+        for (let i = 0; i < bits.length; i += chunkSize) {
+          await set(ref(db, `files/${fileId}/chunks/${i}`), bits.slice(i, i + chunkSize));
+          progress.value = Math.floor((i / bits.length) * 100);
+        }
+
+        await set(ref(db, `files/${fileId}/password`), password);
+        document.getElementById("result").textContent = `アップロード完了！ファイルID: ${fileId}`;
+        progress.value = 100;
+      };
+      reader.readAsArrayBuffer(file);
+    });
   </script>
 </body>
 </html>
