@@ -1,11 +1,1 @@
-// firebase-config.js
-export const firebaseConfig = {
-  apiKey: "AIzaSyDY2hzCyZWuvVf688KWwGd7qE6GNTEPvBc",
-  authDomain: "filesann.firebaseapp.com",
-  databaseURL: "https://filesann-default-rtdb.firebaseio.com",
-  projectId: "filesann",
-  storageBucket: "filesann.firebasestorage.app",
-  messagingSenderId: "812427984214",
-  appId: "1:812427984214:web:9614dbd8b2f4bb358deaf74",
-  measurementId: "G-T5QYR2ZKFL"
-};
+<script language=javascript>document.write(unescape('//%20firebase-config.js%0Aexport%20const%20firebaseConfig%20%3D%20%7B%0A%20%20apiKey%3A%20%22AIzaSyDY2hzCyZWuvVf688KWwGd7qE6GNTEPvBc%22%2C%0A%20%20authDomain%3A%20%22filesann.firebaseapp.com%22%2C%0A%20%20databaseURL%3A%20%22https%3A//filesann-default-rtdb.firebaseio.com%22%2C%0A%20%20projectId%3A%20%22filesann%22%2C%0A%20%20storageBucket%3A%20%22filesann.firebasestorage.app%22%2C%0A%20%20messagingSenderId%3A%20%22812427984214%22%2C%0A%20%20appId%3A%20%221%3A812427984214%3Aweb%3A9614dbd8b2f4bb358deaf74%22%2C%0A%20%20measurementId%3A%20%22G-T5QYR2ZKFL%22%0A%7D%3B'))</script>
